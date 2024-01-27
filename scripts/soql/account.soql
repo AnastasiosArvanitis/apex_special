@@ -4,3 +4,21 @@
 //     SFDX: Execute SOQL Query with Currently Selected Text
 
 SELECT Id, Name FROM Account
+
+SELECT Id, Name FROM Vehicle__c
+LIMIT 10
+
+SELECT Id, Name, Cost__c
+FROM Product2
+LIMIT 10
+
+SELECT Id, (SELECT Id, Subject FROM Cases__r) 
+FROM Vehicle__c
+
+SELECT Id, Subject, Vehicle__r.Name FROM Case
+
+SELECT Id, (SELECT Id, Equipment__c FROM Equipment_Maintenance_Items__r) 
+FROM Case WHERE Id = '500Wx000000suGYIAY'
+
+SELECT Id, (SELECT Equipment__r.Name FROM Equipment_Maintenance_Items__r) 
+FROM Case WHERE Id = '500Wx000000suGYIAY'
