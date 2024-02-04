@@ -58,63 +58,43 @@ for (Case c : [SELECT Id, (SELECT Equipment__r.Id, Equipment__r.Name FROM Equipm
     caseToProductMap.put(c.Id, products);
 }
 
-Id caseId = '500Wx000000suGYIAY'; // replace with your actual Case Id
-List<Product2> products = caseToProductMap.get(caseId);
+Case c = [SELECT Id, (SELECT Equipment__r.Id, Equipment__r.Name FROM Equipment_Maintenance_Items__r) 
+          FROM Case WHERE Id = '500Wx000000jL7dIAE' LIMIT 1];
+System.debug('------ ' +c);
 
-if (products != null) {
-    for (Product2 p : products) {
-        System.debug('Product Id: ' + p.Id);
-        System.debug('Product Name: ' + p.Name);
-    }
-} else {
-    System.debug('No related products found for this case.');
+Case c = [SELECT Id FROM Case WHERE Id = '500Wx000000jL7dIAE' LIMIT 1];
+System.debug('------ ' +c);
+
+List<Product2> equipmentRecords = [SELECT Maintenance_Cycle__c FROM Product2 WHERE Id IN 
+        (SELECT Equipment__c FROM Equipment_Maintenance_Item__c WHERE Maintenance_Request__c = '500Wx000000suGYIAY')];
+
+System.debug('------ ' +equipmentRecords);
+
+
+Case myCase = new Case();
+newRequest.Status = 'New';
+newRequest.Type = 'Routine Maintenance';
+newRequest.Subject = 'Routine Maintenance of vehicle';
+
+// 500Wx000000suGYIAY
+
+List<Case> cases = [SELECT Id FROM Case WHERE Id = '500Wx000000suGYIAY' LIMIT 1];
+if (!cases.isEmpty()) {
+    Case myCase = cases[0];
+    AggregateResult result = [SELECT MIN(Equipment__r.Maintenance_Cycle__c) 
+                              FROM Equipment_Maintenance_Item__c 
+                              WHERE Maintenance_Request__c = :myCase.Id];
+    System.debug('------ ' + result);
 }
 
 
 
-// ----------------------------
 
-trigger MaintenanceRequest on Maintenance_Request__c (after update) {
-    MaintenanceRequestHelper.handleClosedRequests(Trigger.new, Trigger.oldMap);
-}
 
-public class MaintenanceRequestHelper {
-    public static void handleClosedRequests(List<Maintenance_Request__c> newRequests, Map<Id, Maintenance_Request__c> oldRequestsMap) {
-        List<Maintenance_Request__c> closedRequests = new List<Maintenance_Request__c>();
 
-        for (Maintenance_Request__c request : newRequests) {
-            Maintenance_Request__c oldRequest = oldRequestsMap.get(request.Id);
-            if (oldRequest.Status__c != 'Closed' && request.Status__c == 'Closed') {
-                closedRequests.add(request);
-            }
-        }
 
-        if (!closedRequests.isEmpty()) {
-            createRoutineMaintenanceRequests(closedRequests);
-        }
-    }
 
-    public static void createRoutineMaintenanceRequests(List<Maintenance_Request__c> closedRequests) {
-        List<Maintenance_Request__c> newRequests = new List<Maintenance_Request__c>();
 
-        for (Maintenance_Request__c closedRequest : closedRequests) {
-            if (closedRequest.Type == 'Repair' || closedRequest.Type == 'Routine Maintenance') {
-                Maintenance_Request__c newRequest = new Maintenance_Request__c();
-                newRequest.Type = 'Routine Maintenance';
-                newRequest.Subject__c = 'Routine Maintenance for ' + closedRequest.Equipment__r.Name;
-                newRequest.Date_Reported__c = Date.today();
-                newRequest.Equipment__c = closedRequest.Equipment__c;
-                // Calculate due date based on maintenance cycle
-                Integer maintenanceCycle = closedRequest.Equipment__r.Maintenance_Cycle__c;
-                newRequest.Date_Due__c = Date.today().addDays(maintenanceCycle);
-                newRequests.add(newRequest);
-            }
-        }
 
-        if (!newRequests.isEmpty()) {
-            insert newRequests;
-        }
-    }
-    
-}
+
 
