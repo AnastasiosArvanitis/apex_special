@@ -87,10 +87,22 @@ if (!cases.isEmpty()) {
     System.debug('------ ' + result);
 }
 
+WarehouseCalloutService.runWarehouseEquipmentSync();
 
+System.enqueueJob(New WarehouseCalloutService());
 
+// WarehouseSyncScheduleJob
 
+String cron = '0 0 1 * * ?';
+String jobName = 'WarehouseSyncScheduleJob';
+WarehouseSyncSchedule job = new WarehouseSyncSchedule();
+System.schedule(jobName, cron, job);
 
+String jobName = 'WarehouseSyncScheduleJob';
+CronTrigger job = [SELECT Id FROM CronTrigger WHERE CronJobDetail.Name = :jobName];
+
+// Abort the job
+System.abortJob('08eWx000000QR7p');
 
 
 

@@ -33,23 +33,9 @@ public with sharing class MaintenanceRequestHelper {
             }
         }
         if (!requestsToInsert.isEmpty()) {
-            try {
                 if (Schema.sObjectType.Case.isCreateable()) {
-                    List<Database.SaveResult> saveResults = Database.insert(requestsToInsert);
-                    for (Database.SaveResult sr : saveResults) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('--- Successfully inserted record with ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('--- The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('--- Record that caused error: ' + err.getFields());
-                            }
-                        }
-                    }
+                    insert requestsToInsert;
+                    
                     Set<Id> parentIds = new Set<Id>();
                     for (Case request : requestsToInsert){
                         parentIds.add(request.ParentId);
@@ -70,25 +56,8 @@ public with sharing class MaintenanceRequestHelper {
                             }
                         }
                     }
-                    List<Database.SaveResult> saveResultsEMI = Database.insert(copyEMI);
-                    for (Database.SaveResult sr : saveResultsEMI) {
-                        if (sr.isSuccess()) {
-                            // Operation was successful, so get the ID of the record that was processed
-                            System.debug('--- Successfully inserted record with ID: ' + sr.getId());
-                        }
-                        else {
-                            // Operation failed, so get all errors                
-                            for(Database.Error err : sr.getErrors()) {
-                                System.debug('--- The following error has occurred.');                    
-                                System.debug(err.getStatusCode() + ': ' + err.getMessage());
-                                System.debug('--- Record that caused error: ' + err.getFields());
-                            }
-                        }
-                    }
+                    insert copyEMI;
                 }
-            } catch (Exception e) {
-                System.debug('Exception: ' + e.getMessage());
-            }
         }
     }
 
